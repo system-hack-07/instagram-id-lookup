@@ -1,84 +1,61 @@
-addEventListener("fetch", event => {
-  event.respondWith(handle(event.request));
-});
-
-async function handle(req) {
-  const url = new URL(req.url);
-  const name = url.searchParams.get("username");
-
-  if (!name) {
-    return json({ error: "missing_username" }, 400);
-  }
-
+export default async function handler(req, res) {
   try {
-    const res = await fetch(
-      `https://www.instagram.com/${encodeURIComponent(name)}/?__a=1&__d=dis`,
+    const username = req.query.username;
+
+    if (!username) {
+      return res.status(400).json({ error: "missing_username" });
+    }
+
+    const response = await fetch(
+      `https://www.instagram.com/${username}/?__a=1&__d=dis`,
       {
         headers: {
-          "User-Agent": "Mozilla/5.0",
-          "Accept": "text/html,application/json",
-          "Referer": "https://www.instagram.com/"
+          "User-Agent": "Mozilla/5.0"
         }
       }
     );
 
-    const text = await res.text();
+    const text = await response.text();
 
-    // ⚠️ If Instagram blocks → never crash
-    if (!text || text.length < 50 || !text.includes("{")) {
-      return json({
+    // SAFETY CHECK (prevents crash)
+    if (!text || !text.includes("{")) {
+      return res.status(200).json({
         success: false,
-        error: "instagram_blocked",
-        message: "Instagram returned non-JSON response"
-      }, 200);
+        error: "instagram_blocked"
+      });
     }
 
     let data;
     try {
       data = JSON.parse(text);
     } catch (e) {
-      return json({
+      return res.status(200).json({
         success: false,
-        error: "invalid_json",
-        message: "Failed to parse response safely"
-      }, 200);
+        error: "invalid_json"
+      });
     }
 
     const user = data?.graphql?.user;
 
     if (!user) {
-      return json({
-        success: false,
-        error: "not_found"
-      }, 200);
+      return res.status(404).json({ error: "not_found" });
     }
 
-    return json({
+    return res.status(200).json({
       success: true,
       username: user.username,
-      name: user.full_name || user.username,
+      name: user.full_name || "",
       bio: user.biography || "",
-      pic: user.profile_pic_url_hd || user.profile_pic_url,
+      pic: user.profile_pic_url_hd,
       followers: user.edge_followed_by?.count || 0,
       following: user.edge_follow?.count || 0,
       posts: user.edge_owner_to_timeline_media?.count || 0
     });
 
   } catch (err) {
-    return json({
-      success: false,
+    return res.status(500).json({
       error: "server_error",
-      message: err.message
-    }, 200);
+      msg: err.message
+    });
   }
 }
-
-function json(obj, status = 200) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*"
-    }
-  });
-        }
