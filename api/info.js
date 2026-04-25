@@ -11,25 +11,26 @@ async function handle(req) {
   }
 
   try {
-    const r = await fetch(
+    const res = await fetch(
       `https://www.instagram.com/${encodeURIComponent(name)}/?__a=1&__d=dis`,
       {
         headers: {
           "User-Agent": "Mozilla/5.0",
-          "Accept": "application/json",
+          "Accept": "text/html,application/json",
           "Referer": "https://www.instagram.com/"
         }
       }
     );
 
-    const text = await r.text();
+    const text = await res.text();
 
-    // ✅ SAFETY CHECK (Instagram often blocks and returns HTML)
-    if (!text || !text.trim().startsWith("{")) {
+    // ⚠️ If Instagram blocks → never crash
+    if (!text || text.length < 50 || !text.includes("{")) {
       return json({
+        success: false,
         error: "instagram_blocked",
-        message: "Instagram did not return JSON response"
-      }, 429);
+        message: "Instagram returned non-JSON response"
+      }, 200);
     }
 
     let data;
@@ -37,15 +38,19 @@ async function handle(req) {
       data = JSON.parse(text);
     } catch (e) {
       return json({
+        success: false,
         error: "invalid_json",
-        message: "Failed to parse Instagram response"
-      }, 500);
+        message: "Failed to parse response safely"
+      }, 200);
     }
 
     const user = data?.graphql?.user;
 
     if (!user) {
-      return json({ error: "not_found" }, 404);
+      return json({
+        success: false,
+        error: "not_found"
+      }, 200);
     }
 
     return json({
@@ -61,9 +66,10 @@ async function handle(req) {
 
   } catch (err) {
     return json({
+      success: false,
       error: "server_error",
       message: err.message
-    }, 500);
+    }, 200);
   }
 }
 
@@ -75,4 +81,4 @@ function json(obj, status = 200) {
       "Access-Control-Allow-Origin": "*"
     }
   });
-  }
+        }
