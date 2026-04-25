@@ -1,23 +1,34 @@
 export default async function handler(req, res) {
+  const username = req.query.username;
+
+  if (!username) {
+    return res.status(400).json({
+      success: false,
+      error: "missing_username"
+    });
+  }
+
   try {
-    const username = req.query.username;
-
-    if (!username) {
-      return res.status(400).json({ error: "missing_username" });
-    }
-
-    const response = await fetch(
+    const r = await fetch(
       `https://www.instagram.com/${username}/?__a=1&__d=dis`,
       {
         headers: {
-          "User-Agent": "Mozilla/5.0"
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "Accept":
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Referer": "https://www.instagram.com/",
+          "DNT": "1",
+          "Connection": "keep-alive",
+          "Upgrade-Insecure-Requests": "1"
         }
       }
     );
 
-    const text = await response.text();
+    const text = await r.text();
 
-    // SAFETY CHECK (prevents crash)
+    // ⚠️ If Instagram blocks → DO NOT CRASH
     if (!text || !text.includes("{")) {
       return res.status(200).json({
         success: false,
@@ -38,13 +49,16 @@ export default async function handler(req, res) {
     const user = data?.graphql?.user;
 
     if (!user) {
-      return res.status(404).json({ error: "not_found" });
+      return res.status(404).json({
+        success: false,
+        error: "not_found"
+      });
     }
 
     return res.status(200).json({
       success: true,
       username: user.username,
-      name: user.full_name || "",
+      name: user.full_name || user.username,
       bio: user.biography || "",
       pic: user.profile_pic_url_hd,
       followers: user.edge_followed_by?.count || 0,
@@ -54,8 +68,9 @@ export default async function handler(req, res) {
 
   } catch (err) {
     return res.status(500).json({
+      success: false,
       error: "server_error",
-      msg: err.message
+      message: err.message
     });
   }
 }
