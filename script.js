@@ -1,177 +1,103 @@
-body {
-  background:#05060a;
-  color:#00ffd5;
-  font-family:'Orbitron',sans-serif;
-  text-align:center;
-  margin:0;
+const gallery = document.getElementById("gallery");
+const bot = document.getElementById("bot");
+
+document.getElementById("generateBtn").addEventListener("click", generate);
+
+function botLog(text) {
+  const line = document.createElement("div");
+  line.innerText = "AI > " + text;
+  bot.appendChild(line);
+  bot.scrollTop = bot.scrollHeight;
 }
 
-/* WAVES */
-.waves {
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  z-index:-1;
-}
+function bootAnimation() {
+  return new Promise(resolve => {
+    const screen = document.getElementById("bootScreen");
+    const text = document.getElementById("bootText");
 
-.waves span {
-  position:absolute;
-  border-radius:50%;
-  border:1px solid rgba(0,255,213,0.3);
-  animation:wave 8s linear infinite;
-}
+    screen.style.display = "block";
+    text.innerText = "";
 
-.waves span:nth-child(1){width:200px;height:200px;}
-.waves span:nth-child(2){width:400px;height:400px;animation-delay:2s;}
-.waves span:nth-child(3){width:600px;height:600px;animation-delay:4s;}
+    const lines = [
+      "[BOOT] AI CORE INITIALIZED",
+      "[SYS] NEURAL NETWORK LOADED",
+      "[NET] CONNECTING...",
+      "[AUTH] ACCESS GRANTED ✔",
+      "[START] LAUNCHING ENGINE..."
+    ];
 
-@keyframes wave {
-  0% {transform:translate(-50%,-50%) scale(0.5);opacity:0.8;}
-  100% {transform:translate(-50%,-50%) scale(1.8);opacity:0;}
-}
+    let i = 0;
 
-/* APP */
-.app {
-  margin-top:50px;
-  padding-bottom:100px; /* FIX overlap */
-}
+    function typeLine() {
+      if (i >= lines.length) {
+        setTimeout(() => {
+          screen.style.display = "none";
+          resolve();
+        }, 500);
+        return;
+      }
 
-.title {
-  font-size:36px;
-  background:linear-gradient(90deg,#00ffd5,#00bfff,#7a5cff);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-
-.input-box {margin:20px;}
-
-input {
-  padding:10px;
-  background:black;
-  border:1px solid #00ffd5;
-  color:#00ffd5;
-}
-
-button {
-  padding:10px;
-  background:#00ffd5;
-  border:none;
-  cursor:pointer;
-}
-
-/* BOT */
-.bot-console {
-  margin:15px auto;
-  width:260px;
-  height:100px;
-  overflow-y:auto;
-  border:1px solid #00ffd5;
-  padding:8px;
-  font-size:11px;
-  text-align:left;
-}
-
-/* GALLERY */
-.gallery {
-  margin-top:20px;
-  display:grid;
-  grid-template-columns:repeat(2,140px);
-  gap:10px;
-  justify-content:center;
-}
-
-.gallery img {
-  width:100%;
-  cursor:pointer;
-}
-
-/* MODAL */
-.modal {
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.9);
-  justify-content:center;
-  align-items:center;
-}
-
-.modal img {width:80%;}
-
-/* BOOT */
-.boot-screen {
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:black;
-  color:#00ffd5;
-  display:none;
-  z-index:999;
-  padding:20px;
-  font-family:monospace;
-}
-
-/* FOOTER FIXED */
-.footer {
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-
-  padding:8px 0;
-  gap:4px;
-
-  background:rgba(0,0,0,0.6);
-  backdrop-filter:blur(10px);
-
-  z-index:10;
-}
-
-.copyright {
-  font-size:12px;
-  opacity:0.8;
-}
-
-/* GLITCH FIXED */
-.made {
-  position:relative;
-  font-size:13px;
-  max-width:90%;
-  overflow:hidden;
-}
-
-.glitch-name::before,
-.glitch-name::after {
-  content:attr(data-text);
-  position:absolute;
-  left:0;
-  width:100%;
-  text-align:center;
-}
-
-.glitch-name::before {
-  color:red;
-  animation:glitch 1s infinite;
-  clip-path: inset(0 0 50% 0);
-}
-
-.glitch-name::after {
-  color:blue;
-  animation:glitch 1s infinite reverse;
-  clip-path: inset(50% 0 0 0);
-}
-
-@keyframes glitch {
-  0% {transform:translate(0);}
-  50% {transform:translate(-1px,1px);}
-  100% {transform:translate(0);}
+      text.innerText += lines[i] + "\n";
+      i++;
+      setTimeout(typeLine, 500);
     }
+
+    typeLine();
+  });
+}
+
+async function generate() {
+  const prompt = document.getElementById("prompt").value;
+  if (!prompt) return;
+
+  await bootAnimation();
+
+  gallery.innerHTML = "";
+  bot.innerHTML = "";
+
+  botLog("System ready...");
+  botLog("Processing prompt...");
+
+  const requests = [];
+
+  for (let i = 1; i <= 4; i++) {
+    botLog("Generating image " + i + "/4");
+
+    requests.push(
+      fetch("/api/generate", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({prompt})
+      }).then(r=>r.json())
+    );
+  }
+
+  const results = await Promise.all(requests);
+
+  botLog("Rendering results...");
+
+  results.forEach((d, i) => {
+    if (!d.success) {
+      botLog("Image " + (i+1) + " failed ❌");
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.src = d.image;
+    img.onclick = () => openModal(d.image);
+    gallery.appendChild(img);
+
+    botLog("Image " + (i+1) + " ready ✅");
+  });
+
+  botLog("All tasks completed ⚡");
+}
+
+function openModal(src) {
+  document.getElementById("modal").style.display="flex";
+  document.getElementById("modalImg").src=src;
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display="none";
+}
