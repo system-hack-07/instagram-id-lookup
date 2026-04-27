@@ -1,55 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Instagram ID Lookup</title>
+<title>AI Web App</title>
 
 <link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
-<canvas id="matrix"></canvas>
+<!-- WAVES -->
+<div class="waves">
+  <span></span><span></span><span></span>
+</div>
+
+<div class="app">
+
+  <h1 class="title">AI GENERATOR</h1>
+  <p class="subtitle">AI System Console</p>
+
+  <div class="input-box">
+    <input id="prompt" placeholder="Enter prompt...">
+    <button id="generateBtn">GENERATE</button>
+  </div>
+
+  <!-- BOT -->
+  <div class="bot-console" id="bot"></div>
+
+  <!-- GALLERY -->
+  <div class="gallery" id="gallery"></div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal" onclick="closeModal()">
+  <img id="modalImg">
+</div>
 
 <!-- BOOT SCREEN -->
-<div id="boot">
+<div id="bootScreen" class="boot-screen">
   <div id="bootText"></div>
 </div>
 
-<!-- MAIN APP -->
-<div class="app hidden" id="app">
+<!-- FOOTER -->
+<div class="footer">
+  <div class="copyright">© 2026 All Rights Reserved</div>
 
-  <div class="centerBox">
-
-    <div class="title">INSTAGRAM ID LOOKUP</div>
-    <div class="subtitle">Profile Intelligence System</div>
-
-    <div class="search">
-      <input id="user" placeholder="Enter username">
-      <button id="scanBtn">LOOKUP</button>
-    </div>
-
-    <div id="status"></div>
-
-    <div class="barBox">
-      <div id="bar"></div>
-    </div>
-
-    <div id="result"></div>
-    <div id="ipTrace"></div>
-
+  <div class="made glitch-name" data-text="𝗠𝗮𝗱𝗲 𝗯𝘆 :- 𝐒𝐀𝐌𝐀𝐑𝐓𝐇 🅷︎🅰︎🅲︎🅺︎🅴︎🆁︎">
+    𝗠𝗮𝗱𝗲 𝗯𝘆 :- 𝐒𝐀𝐌𝐀𝐑𝐓𝐇 🅷︎🅰︎🅲︎🅺︎🅴︎🆁︎
   </div>
-
-  <div class="footer">
-    @2026 ALL RIGHTS RESERVED<br>
-    MADE BY SAMARTH HACKER
-  </div>
-
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
